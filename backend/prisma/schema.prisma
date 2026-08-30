@@ -1,0 +1,161 @@
+// Prisma schema for Dot Inspire Design Studio
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  SUPERADMIN
+}
+
+enum MediaType {
+  IMAGE
+  YOUTUBE
+}
+
+enum InquiryStatus {
+  UNREAD
+  READ
+  CONTACTED
+}
+
+model AdminUser {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(ADMIN)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Service {
+  id               String   @id @default(uuid())
+  name             String
+  slug             String   @unique
+  shortDescription String
+  description      String   @db.Text
+  coverImage       String?
+  displayOrder     Int      @default(0)
+  isPublished      Boolean  @default(true)
+  isFeatured       Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  items            Item[]
+  inquiries        Inquiry[]
+}
+
+model Item {
+  id               String      @id @default(uuid())
+  serviceId        String
+  service          Service     @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  name             String
+  slug             String      @unique
+  shortDescription String
+  description      String      @db.Text
+  category         String?
+  material         String?
+  specifications   String?     @db.Text
+  isPublished      Boolean     @default(true)
+  isFeatured       Boolean     @default(false)
+  displayOrder     Int         @default(0)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  media            ItemMedia[]
+}
+
+model ItemMedia {
+  id                 String    @id @default(uuid())
+  itemId             String
+  item               Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  type               MediaType
+  url                String
+  cloudinaryPublicId String?
+  youtubeVideoId     String?
+  title              String?
+  displayOrder       Int       @default(0)
+  createdAt          DateTime  @default(now())
+}
+
+model Project {
+  id               String         @id @default(uuid())
+  name             String
+  slug             String         @unique
+  location         String?
+  projectType      String?
+  description      String         @db.Text
+  coverImage       String?
+  servicesInvolved String?
+  isPublished      Boolean        @default(true)
+  isFeatured       Boolean        @default(false)
+  displayOrder     Int            @default(0)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  media            ProjectMedia[]
+}
+
+model ProjectMedia {
+  id                 String    @id @default(uuid())
+  projectId          String
+  project            Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type               MediaType
+  url                String
+  cloudinaryPublicId String?
+  youtubeVideoId     String?
+  title              String?
+  displayOrder       Int       @default(0)
+  createdAt          DateTime  @default(now())
+}
+
+model GalleryItem {
+  id                 String    @id @default(uuid())
+  title              String?
+  description        String?
+  type               MediaType
+  url                String
+  cloudinaryPublicId String?
+  youtubeVideoId     String?
+  displayOrder       Int       @default(0)
+  isPublished        Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+}
+
+model Inquiry {
+  id        String        @id @default(uuid())
+  name      String
+  phone     String
+  email     String?
+  serviceId String?
+  service   Service?      @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  message   String        @db.Text
+  status    InquiryStatus @default(UNREAD)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model WebsiteSettings {
+  id                   String   @id @default("default")
+  businessName         String   @default("Dot Inspire Design Studio")
+  legalName            String   @default("Dot Inspire Interior Design Studio LLP")
+  phone                String   @default("7591953607")
+  whatsapp             String   @default("7591953607")
+  email                String   @default("dotinspire787@gmail.com")
+  address              String   @default("Paigotoor P.O., Paingotoor, PIN 686671, Kerala, India")
+  googleMapsUrl        String?
+  instagramUrl         String?
+  facebookUrl          String?
+  youtubeUrl           String?
+  footerText           String?  @default("Elevating spaces with luxury interior and exterior design craftsmanship.")
+  defaultSeoTitle      String   @default("Dot Inspire Design Studio | Luxury Interior & Exterior Design in Kerala")
+  defaultSeoDescription String @default("Dot Inspire Interior Design Studio LLP offers premium interior design, exterior architecture, curtains, wallpapers, and décor items in Kerala.")
+  updatedAt            DateTime @updatedAt
+}
